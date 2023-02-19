@@ -46,9 +46,6 @@ class MeterReadingFileImport:
         # Create a variable for all the register readings that need saving
         register_readings_to_save = []
 
-        for ob in MeterReading.objects.all():
-            ob.delete()
-
         # Start looping over the rows.
         current_reading_entry = None
         for index, row in readings_data_frame.iterrows():

@@ -81,7 +81,7 @@ class MeterReading(models.Model):
     file_name = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"MPAN: {self.mpan_number} data"
+        return f"MPAN: {self.mpan_number} data ({self.register_readings.count()} reading{'' if self.register_readings.count() == 1 else 's'})"
 
 
 class RegisterReading(models.Model):
@@ -90,7 +90,7 @@ class RegisterReading(models.Model):
         ("P", "Viewed by an Agent or Site Visit")
     ]
 
-    meter_reading = models.ForeignKey(MeterReading, on_delete=models.PROTECT)
+    meter_reading = models.ForeignKey(MeterReading, on_delete=models.PROTECT, related_name='register_readings')
 
     # 030 - Register readings
     meter_register_id = models.CharField(max_length=2)
