@@ -1,3 +1,4 @@
+import datetime
 import math
 
 import pandas
@@ -42,15 +43,18 @@ class MeterReadingFileImport:
         # Get the file name to save
         file_name = self.file_location.split('/')[-1]
 
+        # Create a variable for all the register readings that need saving
+        register_readings_to_save = []
+
+        for ob in MeterReading.objects.all():
+            ob.delete()
+
         # Start looping over the rows.
         current_reading_entry = None
         for index, row in readings_data_frame.iterrows():
             # Ignore the first and last rows of the file, not so sure what they are at this point.
             if index in [0, final_row_number]:
                 continue
-
-            # Create a variable for all the register readings that need saving
-            register_readings_to_save = []
 
             # For values that are required in their row, save directly. If they're not required, check if they're NaN. This would show an error if we're missing a value
 
@@ -61,17 +65,8 @@ class MeterReadingFileImport:
                     if current_reading_entry:
                         try:
                             current_reading_entry.save()
-                            RegisterReading.objects.bulk_create(register_readings_to_save, update_fields=[
-                                "meter_register_id",
-                                "reading_date_time",
-                                "register_reading",
-                                "md_reset_date_time",
-                                "number_of_md_resets",
-                                "meter_reading_flag",
-                                "reading_method"
-                            ])
-                        except IntegrityError as e:  # required fields missing
-                            print(e)
+
+                        except IntegrityError:  # required fields missing
                             raise CommandError("Missing some required data.")  # TODO: Add more info.
 
                     # Start making the reading entry
@@ -92,23 +87,43 @@ class MeterReadingFileImport:
                     current_reading_entry.meter_serial_number = row[1]
                     current_reading_entry.reading_type = row[2]
 
-                case "30":
+                case "030":
                     # Register reading
+                    # Determine meter reading flag
+                    if row[6] == "T":
+                        meter_reading_flag = True
+                    elif row[6] == "F":
+                        meter_reading_flag = False
+                    else:
+                        meter_reading_flag = None
+
                     register_readings_to_save.append(RegisterReading(
+                        meter_reading=current_reading_entry,
                         meter_register_id=row[1],
-                        reading_date_time=row[2],
+                        reading_date_time=datetime.datetime.strptime(row[2], "%Y%m%d%H%M%S"),
                         register_reading=row[3],
-                        md_reset_date_time=row[4] if not math.isnan(row[4]) else None,
+                        md_reset_date_time=datetime.datetime.strptime(row[4], "%Y%m%d%H%M%S") if not math.isnan(row[4]) else None,
                         number_of_md_resets=row[5] if not math.isnan(row[5]) else None,
-                        meter_reading_flag=row[6] if not math.isnan(row[6]) else None,
+                        meter_reading_flag=meter_reading_flag,
                         reading_method=row[7],
                     ))
 
                 case "32":
                     # Meter Reading Validation Result
                     current_reading_entry.meter_reading_reason_code = row[1]
-                    current_reading_entry.meter_reading_status = row[2]
+                    current_reading_entry.meter_reading_status = (True if row[2] == "T" else False)
 
         # Save the final meter reading
         if current_reading_entry:
             current_reading_entry.save()
+
+        # Create the register readings
+        RegisterReading.objects.bulk_create(register_readings_to_save, update_fields=[
+            "meter_register_id",
+            "reading_date_time",
+            "register_reading",
+            "md_reset_date_time",
+            "number_of_md_resets",
+            "meter_reading_flag",
+            "reading_method"
+        ])

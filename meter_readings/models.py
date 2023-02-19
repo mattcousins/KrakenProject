@@ -1,22 +1,6 @@
 from django.db import models
 
 
-class RegisterReading(models.Model):
-    READING_METHOD_CHOICES = [
-        ("N", "Not viewed by an Agent or Non Site Visit"),
-        ("P", "Viewed by an Agent or Site Visit")
-    ]
-
-    # 030 - Register readings
-    meter_register_id = models.CharField(max_length=2)
-    reading_date_time = models.DateTimeField()
-    register_reading = models.DecimalField(max_digits=10, decimal_places=1)
-    md_reset_date_time = models.DateTimeField(null=True)
-    number_of_md_resets = models.IntegerField(null=True)
-    meter_reading_flag = models.BooleanField(choices=[(True, "Valid"), (False, "Suspect")], null=True)
-    reading_method = models.CharField(max_length=1, choices=READING_METHOD_CHOICES)
-
-
 class MeterReading(models.Model):
     BSC_VALIDATION_STATUS_CHOICES = [
         ("F", "Failed"),
@@ -79,7 +63,7 @@ class MeterReading(models.Model):
     bsc_validation_status = models.CharField(max_length=1, choices=BSC_VALIDATION_STATUS_CHOICES)
 
     # 027, 029, 033 - Site visit information
-    data_type_code = models.CharField(null=True, max_length=3, choices=DATA_TYPE_CODE_CHOICES)  # Record source code.
+    site_visit_information_data_type_code = models.CharField(null=True, max_length=3, choices=DATA_TYPE_CODE_CHOICES)  # Record source code.
     site_visit_check_code = models.CharField(null=True, max_length=2)
     site_visit_additional_information = models.CharField(null=True, max_length=200)
 
@@ -88,7 +72,6 @@ class MeterReading(models.Model):
     reading_type = models.CharField(max_length=1, choices=READING_TYPE_CHOICES)
 
     # 030 - Register readings. Could be multiple, so make own model
-    register_reading = models.ForeignKey(RegisterReading, on_delete=models.PROTECT, null=True)
 
     # 032 - Meter Reading Validation Result
     meter_reading_reason_code = models.CharField(max_length=2, choices=METER_READING_REASON_CODE_CHOICES, null=True)
@@ -96,3 +79,24 @@ class MeterReading(models.Model):
 
     # File name
     file_name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"MPAN: {self.mpan_number} data"
+
+
+class RegisterReading(models.Model):
+    READING_METHOD_CHOICES = [
+        ("N", "Not viewed by an Agent or Non Site Visit"),
+        ("P", "Viewed by an Agent or Site Visit")
+    ]
+
+    meter_reading = models.ForeignKey(MeterReading, on_delete=models.PROTECT, null=True)
+
+    # 030 - Register readings
+    meter_register_id = models.CharField(max_length=2)
+    reading_date_time = models.DateTimeField()
+    register_reading = models.DecimalField(max_digits=10, decimal_places=1)
+    md_reset_date_time = models.DateTimeField(null=True)
+    number_of_md_resets = models.IntegerField(null=True)
+    meter_reading_flag = models.BooleanField(choices=[(True, "Valid"), (False, "Suspect")], null=True)
+    reading_method = models.CharField(max_length=1, choices=READING_METHOD_CHOICES)
