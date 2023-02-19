@@ -56,7 +56,8 @@ class MeterReadingFileImport:
             if index in [0, final_row_number]:
                 continue
 
-            # For values that are required in their row, save directly. If they're not required, check if they're NaN. This would show an error if we're missing a value
+            # For values that are required in their row, save directly. If they're not required, check if they're NaN.
+            # This would show an error if we're missing a required value
 
             match row[0]:
                 case "026":

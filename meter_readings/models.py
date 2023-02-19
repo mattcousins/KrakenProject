@@ -63,7 +63,7 @@ class MeterReading(models.Model):
     bsc_validation_status = models.CharField(max_length=1, choices=BSC_VALIDATION_STATUS_CHOICES)
 
     # 027, 029, 033 - Site visit information
-    site_visit_information_data_type_code = models.CharField(null=True, max_length=3, choices=DATA_TYPE_CODE_CHOICES)  # Record source code.
+    site_visit_information_data_type_code = models.CharField(null=True, max_length=3, choices=DATA_TYPE_CODE_CHOICES)  # Record source's code.
     site_visit_check_code = models.CharField(null=True, max_length=2)
     site_visit_additional_information = models.CharField(null=True, max_length=200)
 
@@ -90,7 +90,7 @@ class RegisterReading(models.Model):
         ("P", "Viewed by an Agent or Site Visit")
     ]
 
-    meter_reading = models.ForeignKey(MeterReading, on_delete=models.PROTECT, null=True)
+    meter_reading = models.ForeignKey(MeterReading, on_delete=models.PROTECT)
 
     # 030 - Register readings
     meter_register_id = models.CharField(max_length=2)
