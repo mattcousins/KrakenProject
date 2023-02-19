@@ -1,15 +1,19 @@
-from abc import ABC
+from django.core.management import BaseCommand, CommandError
 
-from django.core.management import BaseCommand
+from meter_readings.MeterReadingFileImport import MeterReadingFileImport
 
 
 class Command(BaseCommand):
     help = 'Imports a J0010 DTC file into the database.'
 
     def add_arguments(self, parser):
-        parser.add_argument('file_location', nargs='+', type=str)
+        parser.add_argument('file_location', type=str)
 
     def handle(self, *args, **options):
-        self.stdout.write('Starting to uploaded file.')
+        self.stdout.write("Starting to upload file.")
+
+        MeterReadingFileImport(options["file_location"]).import_data_to_database()
+
+        self.stdout.write(self.style.SUCCESS("File successfully uploaded."))
 
         return

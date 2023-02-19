@@ -16,6 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from meter_readings import views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', views.MeterReadingListView.as_view()),
+    path('meter-reading/<int:pk>/view/', views.MeterReadingDetailView.as_view(), name='meter_reading_detail'),
 ]
